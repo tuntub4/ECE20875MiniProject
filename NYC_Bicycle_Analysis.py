@@ -14,7 +14,7 @@ def select_bridges(bridge_counts, totals, bridge_names):
         X = np.array(temp_bridges).T
         y = totals
 
-        [X_train, X_test, y_train, y_test] = train_test_split(X, y, test_size=0.25, random_state=0)
+        [X_train, X_test, y_train, y_test] = train_test_split(X, y, test_size=0.25, random_state=101)
         model = LinearRegression()
         model.fit(X_train, y_train)
 
@@ -30,14 +30,18 @@ def select_bridges(bridge_counts, totals, bridge_names):
 def linreg_traffic_and_weather(high_temps, low_temps, precipitation, totals):
     X = np.array([high_temps, low_temps, precipitation]).T
     y = totals
-    [X_train, X_test, y_train, y_test] = train_test_split(X, y, test_size=0.25, random_state=0)
-    model = LinearRegression()
+    [X_train, X_test, y_train, y_test] = train_test_split(X, y, test_size=0.25, random_state=101)
+    [X_train, trn_mean, trn_std] = normalize_train(X_train)
+    X_test = normalize_test(X_test, trn_mean, trn_std)
+
+    model = train_model(X_train, y_train, 1)
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
 
     score = model.score(X_test, y_test)
     return score
+
 
 def display_results():
     data = get_data("NYC_Bicycle_Counts_2016_Corrected.csv")
@@ -69,6 +73,21 @@ def display_results():
     print("\nWhen a linear regression was performed comparing the weather conditions of high temperatures, low temperatures, and precipitation to total traffic, the following results were yielded:")
     print("The cofficient of correlation was calculated to be:", coef_corr_helmets)
     print("As this value is very far from one, there is not a strong relationship between weather conditions and the number of bicyclists, so the forecast should not be used as an indicator.")
+    coef_low = linreg_onestat(low_temps, totals)
+    coef_high = linreg_onestat(high_temps, totals)
+    coef_prec = linreg_onestat(precipitation, totals)
+    coef_highlow = linreg_twostat(low_temps, high_temps, totals)
+    coef_lowprec = linreg_twostat(low_temps, precipitation, totals)
+    coef_highprec = linreg_twostat(high_temps, precipitation, totals)
+    print("The cofficient of correlation for low temp was calculated to be:", coef_low)
+    print("The cofficient of correlation for high temp was calculated to be:", coef_high)
+    print("The cofficient of correlation for prec was calculated to be:", coef_prec)
+    print("The cofficient of correlation for high low was calculated to be:", coef_highlow)
+    print("The cofficient of correlation for low prec was calculated to be:", coef_lowprec)
+    print("The cofficient of correlation for high prec was calculated to be:", coef_highprec)
+
+
 
 display_results()
+
 
