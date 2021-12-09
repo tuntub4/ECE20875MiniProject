@@ -115,7 +115,7 @@ def display_results():
     print("However, some days with very low precipitation may be treated as negligable")
     print("The Naive Bayes model was applied with raining defined as a minimum precipitation ranging from 0-0.25\" in 0.01\" increments")
     print(con_mats[0])
-    plt.plot(precip_range, accuracy)
+    plt.plot(precip_range, accuracy, "o")
     plt.xlabel("Minimum Precipitation (inches)")
     plt.ylabel("Naive Bayes Prediction Accuracy")
     plt.title("Naive Bayes Model Accuracy as a function of Defined Minimum Precipitation")
