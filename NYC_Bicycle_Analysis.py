@@ -2,6 +2,8 @@ from NYC_Bicycle_Analysis_Tools import *
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import confusion_matrix
 import numpy as np
 
 def select_bridges(bridge_counts, totals, bridge_names):
@@ -42,6 +44,22 @@ def linreg_traffic_and_weather(high_temps, low_temps, precipitation, totals):
     score = model.score(X_test, y_test)
     return score
 
+def predict_raining(precipitation, totals, min_precip):
+    X = np.array([totals]).T
+    y = precipitation
+
+    is_raining = [0 if precip <= min_precip else 1 for precip in y]
+
+    [X_train, X_test, y_train, y_test] = train_test_split(X, is_raining, test_size=0.25, random_state=101)
+
+    model = GaussianNB()
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+
+    score = model.score(X_test, y_test)
+    con_mat = confusion_matrix(y_test, y_pred)
+    return score, con_mat
 
 def display_results():
     data = get_data("NYC_Bicycle_Counts_2016_Corrected.csv")
@@ -72,7 +90,6 @@ def display_results():
     coef_corr_helmets = linreg_traffic_and_weather(high_temps, low_temps, precipitation, totals)
     print("\nWhen a linear regression was performed comparing the weather conditions of high temperatures, low temperatures, and precipitation to total traffic, the following results were yielded:")
     print("The cofficient of correlation was calculated to be:", coef_corr_helmets)
-    print("As this value is very far from one, there is not a strong relationship between weather conditions and the number of bicyclists, so the forecast should not be used as an indicator.")
     coef_low = linreg_onestat(low_temps, totals)
     coef_high = linreg_onestat(high_temps, totals)
     coef_prec = linreg_onestat(precipitation, totals)
@@ -86,6 +103,24 @@ def display_results():
     print("The cofficient of correlation for low prec was calculated to be:", coef_lowprec)
     print("The cofficient of correlation for high prec was calculated to be:", coef_highprec)
 
+    #Problem 3
+    accuracy = []
+    con_mats = []
+    precip_range = np.array(range(0,25,1)) / 100
+    for min_precip in precip_range:
+        coef_raining, con_mat = predict_raining(precipitation, totals, min_precip)
+        con_mats.append(con_mat)
+        accuracy.append(coef_raining)
+    print("The Gaussian Naive Bayes model comparing total traffic to precipitation was about to correctly predict if there was rain", accuracy[0]*100, "% of the time")
+    print("However, some days with very low precipitation may be treated as negligable")
+    print("The Naive Bayes model was applied with raining defined as a minimum precipitation ranging from 0-0.25\" in 0.01\" increments")
+    print(con_mats[0])
+    plt.plot(precip_range, accuracy)
+    plt.xlabel("Minimum Precipitation (inches)")
+    plt.ylabel("Naive Bayes Prediction Accuracy")
+    plt.title("Naive Bayes Model Accuracy as a function of Defined Minimum Precipitation")
+    plt.show()
+    
 
 
 display_results()
